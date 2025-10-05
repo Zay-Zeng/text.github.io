@@ -6,7 +6,7 @@
     <title>寻纸地图</title>
 
     <!-- 引入 ECharts -->
-    <script src="./js/echarts.min.js"></script>
+    <script src="./echarts.min.js"></script>
 
     <!-- 基础样式 -->
     <style>
@@ -409,7 +409,7 @@
         <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
     <script src="https://unpkg.com/element-ui/lib/index.js"></script>
     <script src="./main.js"></script>
-        <!-- <script>
+        <script>
             Vue.use(ELEMENT);
             const app = new Vue({
                 el: "#app",
@@ -422,6 +422,8 @@
                         gdp: "",
                         capital: "",
                     },
+                    popoverX: 0,
+                    popoverY: 0,
                 },
                 methods: {
                     initECharts() {
@@ -458,7 +460,14 @@
                                             gdp: d.gdp,
                                             capital: d.capital,
                                         };
-                                        vm.$nextTick(() => { vm.popoverVisible = true; });
+                                        vm.popoverVisible = true;
+                                        vm.$nextTick(() => {
+                                            const mainDiv = document.getElementById('main');
+                                            const mainRect = mainDiv.getBoundingClientRect();
+                                            vm.popoverX = params.event.event.clientX - mainRect.left;
+                                            vm.popoverY = params.event.event.clientY - mainRect.top;
+                                            console.log('popoverX:', vm.popoverX, 'popoverY:', vm.popoverY);
+                                        });
                                     }
                                 });
                             });
@@ -468,7 +477,7 @@
                     this.initECharts();
                 },
             });
-        </script> -->
+        </script>
 
  </body>
  </html>
