@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>寻纸地图</title>
+
+    <!-- 引入 ECharts -->
+    <script src="./js/echarts.min.js"></script>
+
+    <!-- 基础样式 -->
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Microsoft YaHei", sans-serif;
+            background-color: #f8f0e3;
+            background-image: url("https://img.freepik.com/free-photo/brown-paper-texture_95678-72.jpg");
+            background-repeat: repeat;
+            background-size: cover;
+            overflow-y: auto;
+        }
+
+        /* 顶部区域 */
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background: #fff;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .logo-text {
+            font-family: "KaiTi", "STKaiti", serif;
+            font-size: 24px;
+            color: #8b4513;
+            font-weight: bold;
+        }
+        .search-box {
+            display: flex;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .search-box select {
+            border: none;
+            background: #f5f5f5;
+            padding: 5px 8px;
+        }
+        .search-box input {
+            border: none;
+            padding: 5px 10px;
+            width: 180px;
+        }
+        .search-btn {
+            background: #f5f5f5;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .user-links {
+            font-size: 14px;
+        }
+        .user-links a {
+            color: #666;
+            text-decoration: none;
+        }
+
+        /* 主导航栏 */
+        .nav-box {
+            background: #8b4513;
+            width: 100%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .main-nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        .main-nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+        }
+        .main-nav li {
+            margin: 0;
+        }
+        .main-nav a {
+            display: block;
+            color: #fff;
+            text-decoration: none;
+            padding: 15px 20px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        .main-nav a:hover,
+        .main-nav a.active {
+            background: #1c5a8b;
+        }
+
+        /* 横幅区域 */
+        .banner-container {
+            position: relative;
+            max-width: 1200px;
+            height: 120px;
+            margin: 25px auto;
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid #d9c7a7;
+            overflow: hidden;
+        }
+        .banner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            background: #fdf5e6;
+        }
+        .banner-content {
+            position: relative;
+            text-align: center;
+            width: 80%;
+            padding: 16px 0;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .banner-title {
+            font-family: "KaiTi", "STKaiti", serif;
+            color: #4a2c00;
+            font-size: 30px;
+            font-weight: bold;
+            margin: 0 0 8px;
+        }
+        .banner-subtitle {
+            font-family: "KaiTi", "STKaiti", serif;
+            color: #4a2c00;
+            font-size: 18px;
+            margin: 0;
+        }
+        .seal-icon {
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 60px;
+            height: 60px;
+            border: 2px solid #cd5c5c;
+            color: #cd5c5c;
+            font-family: "KaiTi", "STKaiti", serif;
+            font-size: 16px;
+            line-height: 18px;
+            text-align: center;
+            padding-top: 10px;
+            box-sizing: border-box;
+        }
+        .banner-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 30px;
+            height: 30px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .banner-nav.prev {
+            left: 10px;
+        }
+        .banner-nav.next {
+            right: 10px;
+        }
+
+        /* 内容区域 */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .map-container {
+            position: relative;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+        #main {
+            width: 800px;
+            height: 600px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid #d9c7a7;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            border-radius: 10px;
+            padding: 15px;
+            position: relative;
+            z-index: 1;
+        }
+        /* 信息面板 */
+        #info-panel {
+            margin-top: 20px;
+            width: 780px;
+            min-height: 110px;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            display: none;
+        }
+        .province-info {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+        .info-item {
+            width: 48%;
+            margin-bottom: 8px;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #555;
+        }
+
+        /* Popover 参考元素位置 */
+        #popoverRef {
+        position: absolute;
+        }
+
+        /* 已删除知识导航相关样式 */
+
+        [v-cloak] {
+            display: none;
+        }
+    </style>
+
+    <style>
+        .province-popover {
+            border: 2px solid #e44a4a;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+            padding: 0;
+        }
+
+        .popover-content {
+            padding: 10px;
+        }
+
+        .popover-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .popover-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .close-button {
+            border: none;
+            background: none;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .popover-body p {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .popover-footer {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 10px;
+            padding-top: 5px;
+            border-top: 1px solid #eee;
+        }
+
+        .popover-footer .el-button {
+            padding: 0;
+            font-size: 14px;
+        }
+
+        .paper-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .paper-item {
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 5px 8px;
+            font-size: 12px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部区域 -->
+    <header class="top-header">
+        <div class="logo-text">纸短情长</div>
+        <div class="search-box">
+            <select>
+                <option selected>全部</option>
+            </select>
+            <input type="text" placeholder="请输入关键词搜索" />
+            <button class="search-btn">🔍</button>
+        </div>
+        <div class="user-links"><a href="#">登录</a> | <a href="#">无障碍</a> | <a href="#">🌐</a></div>
+    </header>
+
+    <!-- 主导航栏 -->
+    <div class="nav-box">
+        <nav class="main-nav">
+            <ul>
+                <li><a href="#" class="active">首页</a></li>
+                <li><a href="#">纸张索引</a></li>
+                <li><a href="#">历史追溯</a></li>
+                <li><a href="#">文化价值</a></li>
+                <li><a href="#">产品应用</a></li>
+                <li><a href="#">在线课程</a></li>
+                <li><a href="#">互动交流</a></li>
+                <li><a href="#">资讯信息</a></li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- 横幅区域 -->
+    <div class="banner-container">
+        <button class="banner-nav prev">❮</button>
+        <div class="banner">
+            <div class="banner-content">
+                <h2 class="banner-title">传统手工纸知识图谱平台</h2>
+                <p class="banner-subtitle">薄薄一张纸，悠悠岁月情</p>
+                <div class="seal-icon">传工统艺</div>
+            </div>
+        </div>
+        <button class="banner-nav next">❯</button>
+    </div>
+
+    <!-- 内容主体 -->
+    <div class="container">
+        <div class="map-container">
+            <!-- 知识导航 -->
+            <!-- 已删除知识导航 -->
+            <!-- 地图 DOM -->
+            <div id="main"></div>
+            <!-- 引入 Element UI 样式 -->
+            <link rel="stylesheet" href="https://unpkg.com/element-ui@2.15.14/lib/theme-chalk/index.css" />
+            <!-- Vue 挂载点 -->
+            <div id="app" v-cloak>
+                <!-- ElementUI Popover -->
+                <el-popover
+                    placement="top-start"
+                    width="250"
+                    v-model="popoverVisible"
+                    trigger="manual"
+                    popper-class="province-popover"
+                >
+                <div class="popover-content">
+                    <div class="popover-header">
+                        <span class="popover-title" v-if="popoverInfo.name">{{ popoverInfo.name }}</span>
+                        <el-button class="close-button" @click="popoverVisible = false" icon="el-icon-close" circle size="mini"></el-button>
+                    </div>
+                    <div class="popover-body">
+                        <p>人口：{{ popoverInfo.population }}</p>
+                        <p>面积：{{ popoverInfo.area }}</p>
+                        <p>GDP：{{ popoverInfo.gdp }}</p>
+                        <p>省会：{{ popoverInfo.capital }}</p>
+                        <div class="paper-list">
+                            <div v-for="paper in popoverInfo.papers" :key="paper" class="paper-item">{{ paper }}</div>
+                        </div>
+                    </div>
+                    <div class="popover-footer">
+                        <el-button type="text">知识详情</el-button>
+                        <el-button type="text">历史文化</el-button>
+                        <el-button type="text">产品应用</el-button>
+                    </div>
+                </div>
+
+                <span slot="reference" ref="popoverRef" :style="{ left: popoverX + 'px', top: popoverY + 'px', position: 'absolute', width: '1px', height: '1px', overflow: 'hidden' }"></span>
+                </el-popover>
+            </div>
+
+            <!-- 信息面板（如不需要可删除） -->
+            <!-- <div id="info-panel">...</div> -->
+        </div>
+
+
+        <!-- Vue & Element UI -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.7.14/vue.min.js"></script>
+        
+        <script src="./provinceData.js"></script>
+        <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script src="./main.js"></script>
+        <!-- <script>
+            Vue.use(ELEMENT);
+            const app = new Vue({
+                el: "#app",
+                data: {
+                    popoverVisible: false,
+                    popoverInfo: {
+                        name: "",
+                        population: "",
+                        area: "",
+                        gdp: "",
+                        capital: "",
+                    },
+                },
+                methods: {
+                    initECharts() {
+                        const chart = echarts.init(document.getElementById("main"));
+                        const vm = this;
+                        let option;
+                        fetch("https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json")
+                            .then((r) => r.json())
+                            .then((chinaJson) => {
+                                echarts.registerMap("china", chinaJson);
+                                option = {
+                                    tooltip: { trigger: "item", formatter: "{b}" },
+                                    series: [{
+                                        name: "中国",
+                                        type: "map",
+                                        map: "china",
+                                        emphasis: { label: { show: true }, itemStyle: { areaColor: "#66ccff" } },
+                                        data: [
+                                            { name: "北京", value: 80 },
+                                            { name: "福建", value: 70 },
+                                            { name: "江西", value: 65 },
+                                            { name: "浙江", value: 80 },
+                                        ],
+                                    }],
+                                };
+                                chart.setOption(option);
+                                chart.on("click", (params) => {
+                                    if (params.componentType === "series" && provinceData[params.name]) {
+                                        const d = provinceData[params.name];
+                                        vm.popoverInfo = {
+                                            name: params.name,
+                                            population: d.population,
+                                            area: d.area,
+                                            gdp: d.gdp,
+                                            capital: d.capital,
+                                        };
+                                        vm.$nextTick(() => { vm.popoverVisible = true; });
+                                    }
+                                });
+                            });
+                    },
+                },
+                mounted() {
+                    this.initECharts();
+                },
+            });
+        </script> -->
+
+ </body>
+ </html>
